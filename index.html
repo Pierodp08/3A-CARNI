@@ -713,7 +713,7 @@
       document.getElementById('cartTotal').textContent = formatEUR(total);
       updateCartCount();
     }
-      const total = cart.reduce((acc,i)=> acc + i.price * i.qty, 0);
+      const total = cart.reduce((acc,i)=> acc + i.price * (i.kg ?? 0), 0);
       document.getElementById('cartTotal').textContent = formatEUR(total);
       updateCartCount();
     }
@@ -1120,12 +1120,12 @@
 (function(){
   // --- Utilities ---
   const cartKey = 'cart_3a_carni';
-  function formatEUR(n){ return (n||0).toLocaleString('it-IT', {style:'currency', currency:'EUR'}); }
-  function loadCart(){
-    try{ const raw = localStorage.getItem(cartKey); return raw ? JSON.parse(raw) : []; }
-    catch(e){ return []; }
-  }
-  function saveCart(){ localStorage.setItem(cartKey, JSON.stringify(cart)); }
+  /* removed duplicate function formatEUR */
+
+  /* removed duplicate function loadCart */
+
+  /* removed duplicate function saveCart */
+
 
   // --- State ---
   let cart = loadCart();
@@ -1136,285 +1136,66 @@
   // We rely on openNav/closeNav/showSection/showHome injected elsewhere.
 
   // --- Cart panel ---
-  function updateCartCount(){
-    // number of distinct items
-    const count = cart.length;
-    const el = document.getElementById('cartCount');
-    if (el) el.textContent = count;
-  }
-  function toggleCart(){
-    const p = document.getElementById('cartPanel');
-    if (p) p.classList.toggle('open');
-  }
+  /* removed duplicate function updateCartCount */
+
+  /* removed duplicate function toggleCart */
+
   window.toggleCart = toggleCart; // ensure available
 
-  function removeItem(name){
-    cart = cart.filter(i => i.name !== name);
-    saveCart();
-    renderCart();
-  }
+  /* removed duplicate function removeItem */
+
   window.removeItem = removeItem;
 
-  function clearCart(){
-    cart = [];
-    saveCart();
-    renderCart();
-  }
+  /* removed duplicate function clearCart */
+
   window.clearCart = clearCart;
 
-  function changeKg(name, delta){
-    const it = cart.find(i => i.name === name);
-    if (!it) return;
-    const next = Math.round((it.kg + delta)*10)/10;
-    if (next <= 0){ cart = cart.filter(i => i.name !== name); }
-    else { it.kg = next; }
-    saveCart();
-    renderCart();
-  }
+  /* removed duplicate function changeKg */
+
   window.changeKg = changeKg;
 
-  function renderCart(){
-    // safety migrate
-    cart.forEach(it => { if (it.qty != null && it.kg == null){ it.kg = it.qty; delete it.qty; } });
-    const body = document.getElementById('cartItems');
-    if (!body) return;
-    if (cart.length === 0){
-      body.innerHTML = '<p style="opacity:.7;">Nessun prodotto nel carrello.</p>';
-    } else {
-      body.innerHTML = cart.map(i => `
-        <div class="cart-item">
-          <div>
-            <div style="font-size:15px;">${i.name}</div>
-            <div style="opacity:.7;">${formatEUR(i.price)} / kg</div>
-          </div>
-          <div class="qty-controls">
-            <button aria-label="Diminuisci" onclick="changeKg('${i.name.replace(/'/g,"\\'")}', -0.1)">−</button>
-            <div>${(i.kg||0).toFixed(1)} kg</div>
-            <button aria-label="Aumenta" onclick="changeKg('${i.name.replace(/'/g,"\\'")}', 0.1)">+</button>
-          </div>
-          <div style="text-align:right;">
-            <div>${formatEUR(i.price * (i.kg||0))}</div>
-            <button class="btn" style="margin-top:6px;" onclick="removeItem('${i.name.replace(/'/g,"\\'")}')">Rimuovi</button>
-          </div>
-        </div>
-      `).join('');
-    }
-    const total = cart.reduce((a,i)=> a + i.price*(i.kg||0), 0);
-    const totalEl = document.getElementById('cartTotal');
-    if (totalEl) totalEl.textContent = formatEUR(total);
-    updateCartCount();
-  }
+  /* removed duplicate function renderCart */
+
   window.renderCart = renderCart;
 
-  function ensureKgInputs(){
-    document.querySelectorAll('.product').forEach(card => {
-      if (!card.querySelector('.kg-input')){
-        const priceEl = card.querySelector('.price');
-        const wrap = document.createElement('div');
-        wrap.innerHTML = '<label>Kg:&nbsp;</label><input class="kg-input" type="number" value="1.0" step="0.1" min="0.1" max="99.9" style="width:90px;padding:6px;border-radius:6px;border:1px solid #ccc;">';
-        (priceEl && priceEl.parentNode) ? priceEl.parentNode.insertBefore(wrap, priceEl.nextSibling) : card.appendChild(wrap);
-      } else {
-        const input = card.querySelector('.kg-input');
-        input.step="0.1"; input.min="0.1"; input.max="99.9"; if (!input.value) input.value="1.0";
-      }
-    });
-  }
+  /* removed duplicate function ensureKgInputs */
 
-  function addToCart(btn){
-    const card = btn.closest('.product');
-    const name = card.dataset.name;
-    const price = parseFloat(card.dataset.price);
-    const kgInput = card.querySelector('.kg-input');
-    let kg = kgInput ? parseFloat(kgInput.value) : 1.0;
-    if (isNaN(kg) || kg < 0.1) kg = 0.1;
-    kg = Math.round(kg*10)/10;
 
-    const existing = cart.find(i => i.name === name);
-    if (existing){ existing.kg = Math.round((existing.kg + kg)*10)/10; }
-    else { cart.push({ name, price, kg }); }
-    saveCart();
-    renderCart();
-    btn.textContent = 'Aggiunto ✓';
-    setTimeout(()=> btn.textContent='Aggiungi al carrello', 900);
-  }
+  /* removed duplicate function addToCart */
+
   window.addToCart = addToCart;
 
   // --- Checkout (Formspree) ---
   const DELIVERY_FEE = 5.99;
 
-  function getSelectedMethod(){
-    const el = document.querySelector('input[name="metodo"]:checked');
-    return el ? el.value : 'ritiro';
-  }
-  function isThursdayDateStr(dateStr){
-    if (!dateStr) return false;
-    const d = new Date(dateStr + 'T12:00:00');
-    return d.getDay() === 4; // Thu
-  }
-  function isSundayDateStr(dateStr){
-    if (!dateStr) return false;
-    const d = new Date(dateStr + 'T12:00:00');
-    return d.getDay() === 0; // Sun
-  }
-  function minutesFromHHMM(hhmm){
-    const [h,m] = hhmm.split(':').map(Number);
-    return h*60 + m;
-  }
-  function nowPlusLeadMinutes(mins){
-    const d = new Date();
-    d.setMinutes(d.getMinutes() + mins);
-    return d;
-  }
-  function isSameLocalDate(dateStr){
-    const d = new Date();
-    const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-    return dateStr === `${yyyy}-${mm}-${dd}`;
-  }
-  function currentLocalHHMM(){
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mm = String(d.getMinutes()).padStart(2,'0');
-    return `${hh}:${mm}`;
-  }
-  function filterSlotsByLeadTime(slots, dateStr, leadMinutes){
-    if (!isSameLocalDate(dateStr)) return slots;
-    // keep only slots >= now + leadMinutes
-    const cutoff = nowPlusLeadMinutes(leadMinutes);
-    const cutoffMin = cutoff.getHours()*60 + cutoff.getMinutes();
-    return slots.filter(t => minutesFromHHMM(t) >= cutoffMin);
-  }
-  function setDateLimits(){
-    const input = document.getElementById('c_data');
-    if (!input) return;
-    const today = new Date();
-    const pad = n => String(n).padStart(2,'0');
-    const fmt = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
-    const min = today;
-    const max = new Date(today.getTime() + 14*24*60*60*1000);
-    input.min = fmt(min);
-    input.max = fmt(max);
-    if (!input.value) input.value = fmt(today);
-  }
-  function buildSlots(startH, startM, endH, endM, stepMin){
-    const slots=[]; let h=startH, m=startM;
-    while (h < endH || (h===endH && m<=endM)){
-      const hh = String(h).padStart(2,'0');
-      const mm = String(m).padStart(2,'0');
-      slots.push(`${hh}:${mm}`);
-      m += stepMin;
-      while (m >= 60){ m -= 60; h += 1; }
-    }
-    return slots;
-  }
-  function populateTimeOptions(){
-    let dateStr = document.getElementById('c_data')?.value;
-    const fasciaSel = document.getElementById('c_fascia');
-    let fascia = fasciaSel?.value || 'mattina';
-    const select = document.getElementById('c_orario');
-    if (!select) return;
-    select.innerHTML = '';
+  /* removed duplicate function getSelectedMethod */
 
-    // Se domenica, sposta al lunedì (o al giorno successivo non domenica)
-    if (isSundayDateStr(dateStr)){
-      const d = new Date(dateStr + 'T12:00:00');
-      do { d.setDate(d.getDate()+1); } while (d.getDay() === 0); // skip Sundays
-      const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-      dateStr = `${yyyy}-${mm}-${dd}`;
-      const dateEl = document.getElementById('c_data');
-      if (dateEl) dateEl.value = dateStr;
-      alert('La domenica non è disponibile. Ho selezionato il giorno successivo.');
-    }
+  /* removed duplicate function isThursdayDateStr */
 
-    // Costruisci slot base
-    let morning = buildSlots(9,0,12,30,10);
-    let afternoon = isThursdayDateStr(dateStr) ? [] : buildSlots(17,0,19,0,10);
+  /* removed duplicate function isSundayDateStr */
 
-    // Applica lead time 2 ore se il giorno è oggi
-    morning = filterSlotsByLeadTime(morning, dateStr, 120);
-    afternoon = filterSlotsByLeadTime(afternoon, dateStr, 120);
+  /* removed duplicate function minutesFromHHMM */
 
-    // Se fascia pomeriggio non disponibile o vuota, forza mattina
-    if (fascia === 'pomeriggio' && afternoon.length === 0){
-      fascia = 'mattina';
-      if (fasciaSel) fasciaSel.value = 'mattina';
-    }
+  /* removed duplicate function nowPlusLeadMinutes */
 
-    const list = (fascia === 'mattina') ? morning : afternoon;
+  /* removed duplicate function isSameLocalDate */
 
-    // Se lista vuota (es. troppo tardi oggi), prova a cambiare fascia; se ancora vuota, passa al giorno successivo utile
-    if (list.length === 0){
-      // Prova altra fascia
-      const altList = (fascia === 'mattina') ? afternoon : morning;
-      if (altList.length > 0){
-        fascia = (fascia === 'mattina') ? 'pomeriggio' : 'mattina';
-        if (fasciaSel) fasciaSel.value = fascia;
-      } else {
-        // passa al giorno successivo non domenica
-        const d = new Date(dateStr + 'T12:00:00');
-        do { d.setDate(d.getDate()+1); } while (d.getDay() === 0);
-        const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-        dateStr = `${yyyy}-${mm}-${dd}`;
-        const dateEl = document.getElementById('c_data');
-        if (dateEl) dateEl.value = dateStr;
-        // Ricalcola slot per nuovo giorno (nessun lead time perché non è oggi)
-        morning = buildSlots(9,0,12,30,10);
-        afternoon = isThursdayDateStr(dateStr) ? [] : buildSlots(17,0,19,0,10);
-        // Se giovedì e pomeriggio disattivo, resta mattina
-        fascia = (afternoon.length === 0) ? 'mattina' : (fasciaSel?.value || 'mattina');
-        if (fasciaSel) fasciaSel.value = fascia;
-      }
-    }
+  /* removed duplicate function currentLocalHHMM */
 
-    const finalList = (fascia === 'mattina') ? morning : afternoon;
-    finalList.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t; opt.textContent = t;
-      select.appendChild(opt);
-    });
-  }
-  function validatePickupSlot(){
-    const dateStr = document.getElementById('c_data')?.value;
-    const slotSel = document.getElementById('c_fascia');
-    if (slotSel && slotSel.value === 'pomeriggio' && isThursdayDateStr(dateStr)){
-      alert('Giovedì pomeriggio è chiuso. Selezionata la fascia mattutina.');
-      slotSel.value = 'mattina';
-    }
-  }
-  function updateMethodUI(){
-    const method = getSelectedMethod();
-    const ritiroBox = document.getElementById('ritiroOptions');
-    if (ritiroBox) ritiroBox.style.display = (method === 'ritiro') ? 'block' : 'none';
-    updateCheckoutTotals();
-  }
-  function updateCheckoutTotals(){
-    const total = cart.reduce((a,i)=> a + i.price*(i.kg||0), 0);
-    const method = getSelectedMethod();
-    const fee = (method === 'consegna') ? DELIVERY_FEE : 0;
-    const lines = cart.map(i => `${i.name} – ${(i.kg||0).toFixed(1)} kg = ${formatEUR(i.price * (i.kg||0))}`);
-    lines.push(`Subtotale: ${formatEUR(total)}`);
-    if (fee>0) lines.push(`Consegna: ${formatEUR(fee)}`);
-    lines.push(`Totale: ${formatEUR(total + fee)}`);
+  /* removed duplicate function filterSlotsByLeadTime */
 
-    const totalsBox = document.getElementById('checkoutTotals');
-    if (totalsBox) totalsBox.textContent = lines.join(' | ');
+  /* removed duplicate function setDateLimits */
 
-    // hidden form fields
-    const slotSel = document.getElementById('c_fascia');
-    const dateEl = document.getElementById('c_data');
-    const timeEl = document.getElementById('c_orario');
-    const pickupDate = dateEl ? dateEl.value : '';
-    const pickupTime = timeEl ? timeEl.value : '';
+  /* removed duplicate function buildSlots */
 
-    const setVal = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
-    setVal('delivery_method', method);
-    setVal('pickup_slot', slotSel ? slotSel.value : '');
-    setVal('delivery_fee', fee.toFixed(2));
-    setVal('order_total_with_fee', (total + fee).toFixed(2));
-    setVal('order_summary', lines.join('\n'));
-    setVal('order_json', JSON.stringify(cart));
-    setVal('pickup_date', pickupDate);
-    setVal('pickup_time', pickupTime);
-  }
+  /* removed duplicate function populateTimeOptions */
+
+  /* removed duplicate function validatePickupSlot */
+
+  /* removed duplicate function updateMethodUI */
+
+  /* removed duplicate function updateCheckoutTotals */
+
   window.openCheckout = function(){
     if (cart.length === 0){ alert('Il carrello è vuoto.'); return; }
     const modal = document.getElementById('checkoutModal');
@@ -1585,7 +1366,8 @@ function addFromModal(name, price){
     try{ window.cart = JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ window.cart=[] }
   }
   window.cart.forEach(it=>{ if(it && it.qty!=null && it.kg==null){ it.kg=it.qty; delete it.qty; } });
-  function save(){ localStorage.setItem(KEY, JSON.stringify(window.cart)); }
+  /* removed duplicate function save */
+
   window.addItem = function(name, price, kg){
     if (isNaN(kg)||kg<0.1) kg=0.1; kg=Math.round(kg*10)/10;
     const ex = window.cart.find(i=>i.name===name);
