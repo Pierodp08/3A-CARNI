@@ -1220,17 +1220,7 @@
     });
   }
 
-  function addToCart(btn){
-    const card = btn.closest('.product');
-    const name = card.dataset.name;
-    const price = parseFloat(card.dataset.price);
-    const kgInput = card.querySelector('.kg-input');
-    let kg = kgInput ? parseFloat(kgInput.value) : 1.0;
-    if (isNaN(kg) || kg < 0.1) kg = 0.1;
-    kg = Math.round(kg*10)/10;
-
-    const existing = cart.find(i => i.name === name);
-    if (existing){ existing.kg = Math.round((existing.kg + kg)*10)/10; }
+  /* Duplicato rimosso: addToCart() */
     else { cart.push({ name, price, kg }); }
     saveCart();
     renderCart();
@@ -1489,16 +1479,23 @@ function openProductModal(card){
           <button type="button" onclick="const el=document.getElementById('modalKg'); el.value=(Math.min(99.9,(parseFloat(el.value)||1)+0.1)).toFixed(1)" style="width:36px;height:36px;border-radius:10px;border:1px solid #3a3a3a;background:#151515;color:#fff;cursor:pointer;">+</button>
         </div>
       </div>
-      <button onclick="addFromModal('${name}', ${price})" style="margin-top:6px;padding:12px 18px;background:linear-gradient(180deg,#ff1c1c,#ff3333);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:800;letter-spacing:.3px;box-shadow:0 10px 18px rgba(229,57,53,.35);">Aggiungi al carrello</button>
+      <button onclick="addToCart(this)" style="margin-top:6px;padding:12px 18px;background:linear-gradient(180deg,#ff1c1c,#ff3333);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:800;letter-spacing:.3px;box-shadow:0 10px 18px rgba(229,57,53,.35);">Aggiungi al carrello</button>
     </div>`;
   document.getElementById('productModal').style.display = 'flex';
 }
 function closeProductModal(){
   document.getElementById('productModal').style.display = 'none';
 }
-
-  else { window.cart.push({name, price, kg}); }
-  localStorage.setItem('cart_3a_carni', JSON.stringify(window.cart));
+function addFromModal(name, price){
+  const kgInput = document.getElementById('modalKg');
+  let kg = parseFloat(kgInput.value);
+  if (isNaN(kg) || kg<0.1) kg=0.1;
+  kg = Math.round(kg*10)/10;
+  // add to cart
+  const existing = cart.find(i => i.name===name);
+  if (existing){ existing.kg = Math.round((existing.kg+kg)*10)/10; }
+  else { cart.push({name, price, kg}); }
+  localStorage.setItem('cart_3a_carni', JSON.stringify(cart));
   renderCart();
   closeProductModal();
 }
@@ -1513,19 +1510,19 @@ function closeProductModal(){
   function save(x){ localStorage.setItem(CART_KEY, JSON.stringify(x)); }
 
   // Ensure a single global cart reference
-  if (!window.cart){ window.cart = load(); }
+  if (!cart){ cart = load(); }
   // Migration qty->kg
-  window.cart.forEach(it => { if (it && it.qty != null && it.kg == null){ it.kg = it.qty; delete it.qty; } });
+  cart.forEach(it => { if (it && it.qty != null && it.kg == null){ it.kg = it.qty; delete it.qty; } });
 
   // Expose a single method to add items programmatically
   window.addItem = function(name, price, kg){
     if (isNaN(price)) price = 0;
     if (isNaN(kg) || kg < 0.1) kg = 0.1;
     kg = Math.round(kg * 10) / 10;
-    const ex = window.cart.find(i => i.name === name);
+    const ex = cart.find(i => i.name === name);
     if (ex){ ex.kg = Math.round((ex.kg + kg) * 10) / 10; }
-    else { window.cart.push({ name, price: parseFloat(price), kg }); }
-    save(window.cart);
+    else { cart.push({ name, price: parseFloat(price), kg }); }
+    save(cart);
     if (typeof window.renderCart === 'function') window.renderCart();
   };
 
@@ -1548,11 +1545,11 @@ function closeProductModal(){
   if (typeof window.addItem !== 'function'){
     window.addItem = function(name, price, kg){
       const key='cart_3a_carni';
-      try{ window.cart = JSON.parse(localStorage.getItem(key))||[] }catch(e){ window.cart=[] }
+      try{ cart = JSON.parse(localStorage.getItem(key))||[] }catch(e){ cart=[] }
       if (isNaN(kg)||kg<0.1) kg=0.1; kg=Math.round(kg*10)/10;
-      const ex=window.cart.find(i=>i.name===name);
-      if (ex){ ex.kg=Math.round((ex.kg+kg)*10)/10 } else { window.cart.push({name,price:parseFloat(price),kg}) }
-      localStorage.setItem(key, JSON.stringify(window.cart));
+      const ex=cart.find(i=>i.name===name);
+      if (ex){ ex.kg=Math.round((ex.kg+kg)*10)/10 } else { cart.push({name,price:parseFloat(price),kg}) }
+      localStorage.setItem(key, JSON.stringify(cart));
       if (typeof window.renderCart==='function') window.renderCart();
     };
   }
@@ -1574,15 +1571,15 @@ function closeProductModal(){
 <script>
 (function(){
   const KEY='cart_3a_carni';
-  if (!window.cart){
-    try{ window.cart = JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ window.cart=[] }
+  if (!cart){
+    try{ cart = JSON.parse(localStorage.getItem(KEY))||[] }catch(e){ cart=[] }
   }
-  window.cart.forEach(it=>{ if(it && it.qty!=null && it.kg==null){ it.kg=it.qty; delete it.qty; } });
-  function save(){ localStorage.setItem(KEY, JSON.stringify(window.cart)); }
+  cart.forEach(it=>{ if(it && it.qty!=null && it.kg==null){ it.kg=it.qty; delete it.qty; } });
+  function save(){ localStorage.setItem(KEY, JSON.stringify(cart)); }
   window.addItem = function(name, price, kg){
     if (isNaN(kg)||kg<0.1) kg=0.1; kg=Math.round(kg*10)/10;
-    const ex = window.cart.find(i=>i.name===name);
-    if (ex){ ex.kg = Math.round((ex.kg+kg)*10)/10; } else { window.cart.push({name, price:parseFloat(price), kg}); }
+    const ex = cart.find(i=>i.name===name);
+    if (ex){ ex.kg = Math.round((ex.kg+kg)*10)/10; } else { cart.push({name, price:parseFloat(price), kg}); }
     save();
     if (typeof renderCart==='function') renderCart();
   };
